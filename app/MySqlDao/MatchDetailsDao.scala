@@ -1,6 +1,6 @@
 package MySqlDao
 
-import models.IplDetails
+import models.MatchDetails
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.mvc.{AbstractController, ControllerComponents}
 import slick.jdbc.JdbcProfile
@@ -10,57 +10,61 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class MatchDetailsDao @Inject()(val dbConfigProvider: DatabaseConfigProvider,
-                                implicit val ec : ExecutionContext,
-                                cc : ControllerComponents
-                               ) extends AbstractController(cc) with HasDatabaseConfigProvider[JdbcProfile]{
+                                    implicit val ec : ExecutionContext,
+                                    cc : ControllerComponents
+                                   ) extends AbstractController(cc) with HasDatabaseConfigProvider[JdbcProfile]{
 
   import profile.api._
 
   private val matchDetails: TableQuery[MatchDetailsTable] = TableQuery[MatchDetailsTable]
+//  private val venue: TableQuery[VenueTable] = TableQuery[VenueTable]
+//  private val team: TableQuery[TeamTable] = TableQuery[TeamTable]
+//
+//
+//  class VenueTable(tag : Tag) extends Table[Venue](tag,
+//  "venues") {
+//    def venueId = column[String]("venue_id", O.PrimaryKey)
+//    def venueName = column[String]("venue_name")
+//    def * = (venueId,venueName) <> ((Venue.apply _).tupled,Venue.unapply)
+//  }
+//
+//  class TeamTable(tag : Tag) extends Table[Team](tag,
+//    "teams") {
+//    def teamId = column[String]("team_id", O.PrimaryKey)
+//    def teamName = column[String]("team_name")
+//    def * = (teamId,teamName) <> ((Team.apply _).tupled,Team.unapply)
+//  }
 
-  private val teamWinCountDetails : TableQuery[TeamWinCountDetailsTable] = TableQuery[TeamWinCountDetailsTable]
 
-  private class TeamWinCountDetailsTable(tag : Tag) extends Table[(String,Int)](tag, "team_win_counts") {
-    def teamName = column[String]("team_name", O.PrimaryKey)
-    def totalWins = column[Int]("total_wins")
-    def * = (teamName,totalWins)
-  }
-
-  private class MatchDetailsTable(tag: Tag) extends Table[IplDetails](tag,
-    "match_details") {
-    def id = column[Long]("id",O.PrimaryKey)
+  class MatchDetailsTable(tag: Tag) extends Table[MatchDetails](tag,
+  "match_details") {
+    def matchId = column[Long]("match_id",O.PrimaryKey)
     def city = column[String]("city")
     def date = column[LocalDate]("date")
     def mom = column[String]("man_of_match")
-    def venue = column[String]("venue")
+    def venueName = column[String]("venue")
     def team1 = column[String]("first_team")
     def team2 = column[String]("second_team")
-    def tossWinner = column[String]("toss_winner")
-    def tossDecision = column[String]("toss_decision")
     def winner = column[String]("winner")
     def result = column[String]("result")
-    def eliminator = column[String]("eliminator")
-    def firstUmpire = column[String]("first_umpire")
-    def secondUmpire = column[String]("second_umpire")
-    def * = (id,city,date,mom,venue,team1,team2,tossWinner,
-      tossDecision,winner,result,eliminator,firstUmpire,secondUmpire)<>
-      ((IplDetails.apply _).tupled,IplDetails.unapply)
+    def * = (matchId,city,date,mom,venueName,team1,team2,winner,result) <> (
+      (MatchDetails.apply _).tupled,MatchDetails.unapply)
+
+//    def venueFk = foreignKey("venue_fk", venueName, venue)(_.venueId, onDelete = ForeignKeyAction.Cascade)
+//    def team1Fk = foreignKey("team_fk",team1,team)(_.teamId,onDelete = ForeignKeyAction.Cascade)
+//    def team2Fk = foreignKey("team_fk",team1,team)(_.teamId,onDelete = ForeignKeyAction.Cascade)
+
   }
 
-  def insert(iplDetails :IplDetails) = {
-    db.run(DBIO.seq(matchDetails.schema.createIfNotExists, matchDetails += (iplDetails)))
+  def insert(mDetails : MatchDetails) = {
+    db.run(DBIO.seq(matchDetails.schema.createIfNotExists, matchDetails += mDetails))
   }
 
-  def getAll() : Future[Seq[IplDetails]] = {
+  def getAllMatches() : Future[Seq[MatchDetails]] = {
     db.run(matchDetails.result)
   }
-
-  def insertTeamWinCounts(winCountList : List[(String,Int)]) = {
-    db.run(DBIO.seq(teamWinCountDetails.schema.createIfNotExists, teamWinCountDetails ++= (winCountList)))
-  }
-
-  def fetchTeamWinCounts(): Future[Seq[(String, Int)]] = {
-    db.run(teamWinCountDetails.result)
+  def getMatchDetailsByTeam(teamName : String) = {
+    db.run(matchDetails.filter(_.team1 === teamName).result)
   }
 
 }

@@ -22,3 +22,22 @@ case class IplDetails(id : Long,
 object IplDetails {
   implicit val iplDetailsFormat: OFormat[IplDetails] = Json.format[IplDetails]
 }
+
+case class Venue(venueId : String, venueName : String)
+
+case class Team(teamId : String,teamName : String)
+
+case class MatchDetails(matchId : Long,
+                        city : String,
+                        date : LocalDate,
+                        mom : String,
+                        venue : String,
+                        team1 : String,
+                        team2 : String,
+                        winner : String,
+                        result : String
+                       )
+
+object MatchDetails{
+  implicit val matchDetailsFormat: OFormat[MatchDetails] = Json.format[MatchDetails]
+}

@@ -1,11 +1,12 @@
 package controllers
 
-import MySqlDao.MatchDetailsDao
+import MySqlDao.{FullMatchDetailsDao, MatchDetailsDao}
 import akka.stream.scaladsl.{FileIO, Framing, Keep, Sink}
 import akka.stream.{ActorAttributes, Materializer}
 import akka.util.ByteString
 import models.IplDetails
-import modules.flows.AppFlows.{ decider, mappingFlow, teamWinCountFlow}
+import modules.flows.AppFlows.{decider, mappingFlow}
+import modules.flows.TableGenerator
 import play.api.libs.json.Json
 import play.api.mvc._
 
@@ -18,7 +19,9 @@ import scala.concurrent.{ExecutionContext, Future}
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(val matchDetailsDao: MatchDetailsDao,
+class HomeController @Inject()(val fullMatchDetailsDao: FullMatchDetailsDao,
+                               val matchDetailsDao: MatchDetailsDao,
+                               val tableGenerator: TableGenerator,
                                val controllerComponents: ControllerComponents)
                               (implicit mat: Materializer,ec : ExecutionContext)
   extends BaseController {
@@ -40,27 +43,29 @@ class HomeController @Inject()(val matchDetailsDao: MatchDetailsDao,
     }
   }
 
-  def readCsv() = Action.async{implicit request : Request[AnyContent] =>
+  def processCsv() = Action.async{implicit request : Request[AnyContent] =>
     FileIO.fromPath(Paths.get("C:\\Play_Framework\\play_basics\\conf\\IPL.csv"))
       .via(Framing.delimiter(ByteString("\n"),4096)
-        .filterNot(x => x.contains("id,city"))
-        .map(_.utf8String))
+        .map(_.utf8String)).drop(1)
       .via(mappingFlow)
-      .mapAsync(10)(ipl => matchDetailsDao.insert(ipl).map(_ => ipl))
+      .mapAsync(10)(ipl => tableGenerator.insertDataToTables(ipl))
       .fold(Seq.empty[IplDetails])((acc,n) => acc :+ n)
-      .via(teamWinCountFlow)
-      .mapAsync(10)(aggResults => matchDetailsDao.insertTeamWinCounts(aggResults))
+      .mapAsync(10)(matchesList => tableGenerator.performAggregations(matchesList))
       .toMat(Sink.ignore)(Keep.right)
       .withAttributes(ActorAttributes.supervisionStrategy(decider))
       .run().map(_ => Ok("Done"))
 }
 
   def getMatchDetails() = Action.async{implicit request =>
-      matchDetailsDao.getAll().map(x => Ok(Json.toJson(x)))
+    fullMatchDetailsDao.getAll().map(x => Ok(Json.toJson(x)))
   }
 
   def fetchTeamWinCounts() = Action.async{ implicit request =>
-    matchDetailsDao.fetchTeamWinCounts().map(x => Ok(Json.toJson(x)))
+    fullMatchDetailsDao.fetchTeamWinCounts().map(x => Ok(Json.toJson(x)))
   }
 
+  def fetchMatchHistoryByTeam(teamName : String) = Action.async{ implicit
+                                                              request =>
+    matchDetailsDao.getMatchDetailsByTeam(teamName).map(x => Ok(Json.toJson(x)))
   }
+}

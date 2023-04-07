@@ -13,11 +13,14 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 GET     /hello                      controllers.HomeController.helloPlay()
 
 #Reading csv file and storing it to DB
-GET     /readCsv                    controllers.HomeController.readCsv()
+GET     /processCsv                    controllers.HomeController.processCsv()
 
 #Fetching data from DB
 GET     /getMatchDetails            controllers.HomeController.getMatchDetails()
 
 #Fetching win counts per team from DB
 GET     /fetchTeamWinCounts         controllers.HomeController.fetchTeamWinCounts()
+
+#Fetch match history by team from DB
+GET     /fetchMatchHistory/:teamName  controllers.HomeController.fetchMatchHistoryByTeam(teamName : String)
 
