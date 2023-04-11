@@ -25,7 +25,7 @@ lazy val akkaDependencies = Seq(
 lazy val loggingDependencies = Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
 //  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
-  "org.slf4j" % "slf4j-api" % "1.7.25"
+ // "org.slf4j" % "slf4j-api" % "1.7.25"
 )
 
 lazy val slickDependencies = Seq(
