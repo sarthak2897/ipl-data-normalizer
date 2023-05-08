@@ -22,5 +22,4 @@ GET     /getMatchDetails            controllers.HomeController.getMatchDetails()
 GET     /fetchTeamWinCounts         controllers.HomeController.fetchTeamWinCounts()
 
 #Fetch match history by team from DB
-GET     /fetchMatchHistory/:teamName  controllers.HomeController.fetchMatchHistoryByTeam(teamName : String)
-
+GET /fetchMatchHistory/:teamName controllers.HomeController.fetchMatchHistoryByTeam(teamName : String)

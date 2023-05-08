@@ -7,6 +7,8 @@ import akka.util.ByteString
 import models.IplDetails
 import modules.flows.AppFlows.{decider, mappingFlow}
 import modules.flows.TableGenerator
+import play.api.Logger
+//import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import play.api.mvc._
 
@@ -26,6 +28,7 @@ class HomeController @Inject()(val fullMatchDetailsDao: FullMatchDetailsDao,
                               (implicit mat: Materializer,ec : ExecutionContext)
   extends BaseController {
 
+  final val logger : Logger = Logger(this.getClass)
   /**
    * Create an Action to render an HTML page.
    *
@@ -57,15 +60,18 @@ class HomeController @Inject()(val fullMatchDetailsDao: FullMatchDetailsDao,
 }
 
   def getMatchDetails() = Action.async{implicit request =>
+    logger.info("Retrieving denormalized match details data.")
     fullMatchDetailsDao.getAll().map(x => Ok(Json.toJson(x)))
   }
 
   def fetchTeamWinCounts() = Action.async{ implicit request =>
+    logger.info("Retrieving win counts per team.")
     fullMatchDetailsDao.fetchTeamWinCounts().map(x => Ok(Json.toJson(x)))
   }
 
   def fetchMatchHistoryByTeam(teamName : String) = Action.async{ implicit
                                                               request =>
+    logger.info("Retrieving match details history for team : "+teamName)
     matchDetailsDao.getMatchDetailsByTeam(teamName).map(x => Ok(Json.toJson(x)))
   }
 }

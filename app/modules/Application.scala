@@ -7,7 +7,8 @@ import akka.util.ByteString
 import models.IplDetails
 import modules.flows.AppFlows.{decider, mappingFlow}
 import modules.flows.TableGenerator
-import org.slf4j.{Logger, LoggerFactory}
+import play.api.Logger
+//import org.slf4j.{Logger, LoggerFactory}
 import play.api.mvc.{BaseController, ControllerComponents}
 
 import java.nio.file.Paths
@@ -21,9 +22,9 @@ class Application @Inject()(val ac : ActorSystem,
                              val tableGenerator: TableGenerator,
                              val controllerComponents: ControllerComponents) extends BaseController {
 
-  val logger : Logger = LoggerFactory.getLogger(classOf[Application])
+  final val logger : Logger = Logger(this.getClass)
 
-  logger.info("Starting the stream.....")
+  logger.info("Starting the stream. Reading the file.")
 
   FileIO.fromPath(Paths.get("C:\\Play_Framework\\play_basics\\conf\\IPL.csv"))
     .via(Framing.delimiter(ByteString("\n"),4096)
@@ -34,7 +35,9 @@ class Application @Inject()(val ac : ActorSystem,
     .mapAsync(10)(matchesList => tableGenerator.performAggregations(matchesList))
     .toMat(Sink.ignore)(Keep.right)
     .withAttributes(ActorAttributes.supervisionStrategy(decider))
-    .run().map(_ => Ok("Done"))
+    .run().recover{
+    case e : Exception => e.printStackTrace()
+  }.onComplete(_ => logger.info("Job Complete."))
 
 }
 

@@ -5,7 +5,7 @@ organization := "com.play"
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).enablePlugins(PlayScala, LauncherJarPlugin)
 
 //scalaVersion := "2.12.5"
 
@@ -19,11 +19,11 @@ lazy val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-stream-kafka" % "0.22",
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+//  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
 )
 
 lazy val loggingDependencies = Seq(
-  "ch.qos.logback" % "logback-classic" % "1.2.3",
+ // "ch.qos.logback" % "logback-classic" % "1.2.3",
 //  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
  // "org.slf4j" % "slf4j-api" % "1.7.25"
 )

@@ -4,14 +4,15 @@ import akka.NotUsed
 import akka.stream.Supervision
 import akka.stream.scaladsl.Flow
 import models.{IplDetails, MatchDetails, Team, Venue}
-import org.slf4j.{Logger, LoggerFactory}
+import play.api.Logger
+//import org.slf4j.{Logger, LoggerFactory}
 import utils.Utils.{formatTimestamp, generateTeamId, generateVenueId}
 
 import java.sql.SQLIntegrityConstraintViolationException
 
 object AppFlows {
 
-  val log : Logger = LoggerFactory.getLogger(AppFlows.getClass)
+  final val logger : Logger = Logger(this.getClass)
 
 def toIPLDetails(matchList : List[String]): IplDetails = {
     IplDetails(id = matchList.headOption.map(_.toLong).getOrElse(0L),
@@ -55,11 +56,11 @@ def toTotalTeamWinCounts(iplDetailsList : Seq[IplDetails]) = {
 
   val decider : Supervision.Decider = {
     case e : NumberFormatException =>
-      e.printStackTrace();
+      logger.error(""+e.printStackTrace())
       Supervision.Resume
     case e : SQLIntegrityConstraintViolationException => Supervision.Resume
     case e : Exception =>
-      e.printStackTrace();
+      logger.error(""+e.printStackTrace())
       Supervision.Stop
   }
 }
